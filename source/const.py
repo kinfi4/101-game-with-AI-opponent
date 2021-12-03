@@ -1,8 +1,13 @@
+from collections import namedtuple
+
+
+Point = namedtuple('Point', 'x y')
+
 SCREEN_SIZE = (1200, 900)
 FPS = 30
 
-CARD_SIZE = (40, 90)
-MOVE_SPEED = 20
+CARD_SIZE = (120, 190)
+MOVE_SPEED = 40
 
 
 class Color:

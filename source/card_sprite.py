@@ -1,7 +1,7 @@
 import math
 
 import pygame as pg
-from const import MOVE_SPEED
+from const import MOVE_SPEED, CARD_SIZE
 
 
 class CardSprite(pg.sprite.Sprite):
@@ -9,18 +9,19 @@ class CardSprite(pg.sprite.Sprite):
         super().__init__()
 
         self.image = pg.image.load(picture_path)
+        self.image = pg.transform.scale(self.image, CARD_SIZE)
         self.rect = self.image.get_rect()
 
         self.rect.center = (pos_x, pos_y)
+        self.rect.size = CARD_SIZE
 
     @property
     def pos(self):
-        return self.rect
+        return self.rect.center
 
     @pos.setter
     def pos(self, pos):
-        self.rect[0] = pos[0]
-        self.rect[1] = pos[1]
+        self.rect.center = pos
 
 
 class SpriteMove:
@@ -30,9 +31,9 @@ class SpriteMove:
 
         for sprite, dest_position in zip(self.sprites, self.dest_positions):
             sprite.start_pos = sprite.pos
+            print(sprite.start_pos, dest_position)
             sprite.angle = math.atan2(dest_position[1] - sprite.start_pos[1], dest_position[0] - sprite.start_pos[0])
             sprite.distance = SpriteMove.calc_distance(dest_position, sprite.start_pos)
-            sprite.speed = MOVE_SPEED
             sprite.completed = False
 
     @staticmethod
@@ -44,7 +45,7 @@ class SpriteMove:
             if sprite.completed:
                 continue
 
-            new_pos = (sprite.pos[0] + sprite.speed * math.cos(sprite.angle), sprite.pos[1] + sprite.speed * math.sin(sprite.angle))
+            new_pos = (sprite.pos[0] + MOVE_SPEED * math.cos(sprite.angle), sprite.pos[1] + MOVE_SPEED * math.sin(sprite.angle))
             distance = SpriteMove.calc_distance(new_pos, sprite.start_pos)
 
             if distance < sprite.distance:

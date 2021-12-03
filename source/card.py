@@ -12,6 +12,9 @@ class Card:
         if rank == Rank.back_side:
             picture_path = './img/back-side.png'
         else:
-            picture_path = f'./img/cards/{rank.value}_of_{suit.value}.png'
+            picture_path = f'./img/cards/{rank}_of_{suit}.png'
 
         self.sprite = CardSprite(self.position_x, self.position_y, picture_path)
+
+    def __hash__(self):
+        return hash(self.rank + self.suit)
