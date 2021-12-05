@@ -31,7 +31,6 @@ class SpriteMove:
 
         for sprite, dest_position in zip(self.sprites, self.dest_positions):
             sprite.start_pos = sprite.pos
-            print(sprite.start_pos, dest_position)
             sprite.angle = math.atan2(dest_position[1] - sprite.start_pos[1], dest_position[0] - sprite.start_pos[0])
             sprite.distance = SpriteMove.calc_distance(dest_position, sprite.start_pos)
             sprite.completed = False

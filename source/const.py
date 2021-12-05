@@ -1,5 +1,7 @@
 from collections import namedtuple
 
+USER = 'USER'
+AGENT = 'AGENT'
 
 Point = namedtuple('Point', 'x y')
 
@@ -7,6 +9,13 @@ SCREEN_SIZE = (1200, 900)
 FPS = 30
 
 CARD_SIZE = (120, 190)
+
+
+def change_card_size(multiplier):
+    global CARD_SIZE
+    CARD_SIZE = CARD_SIZE[0]*multiplier, CARD_SIZE[1]*multiplier
+
+
 MOVE_SPEED = 40
 
 
