@@ -6,7 +6,7 @@ AGENT = 'AGENT'
 Point = namedtuple('Point', 'x y')
 
 SCREEN_SIZE = (1200, 900)
-FPS = 30
+FPS = 100
 
 CARD_SIZE = (120, 190)
 
@@ -16,7 +16,7 @@ def change_card_size(multiplier):
     CARD_SIZE = CARD_SIZE[0]*multiplier, CARD_SIZE[1]*multiplier
 
 
-MOVE_SPEED = 40
+MOVE_SPEED = 15
 
 
 class Color:
