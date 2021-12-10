@@ -5,7 +5,7 @@ AGENT = 'AGENT'
 
 Point = namedtuple('Point', 'x y')
 
-SCREEN_SIZE = (1200, 900)
+SCREEN_SIZE = (1900, 900)
 FPS = 100
 
 CARD_SIZE = (120, 190)
@@ -52,3 +52,16 @@ class Suit:
     clubs = 'clubs'
     spades = 'spades'
     back_side = 'back_side'
+
+
+CARDS_POINTS_BY_RANK = {
+    Rank.six: 0,
+    Rank.seven: 50,
+    Rank.eight: 25,
+    Rank.nine: 0,
+    Rank.ten: 10,
+    Rank.jack: 20,
+    Rank.queen: 0,
+    Rank.king: 0,
+    Rank.ace: 25
+}

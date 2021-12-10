@@ -3,10 +3,9 @@ from random import sample, choice
 
 import pygame as pg
 
-from agent import Agent
 from card import Card
 from card_sprite import SpriteMove
-from const import FPS, SCREEN_SIZE, Point, Suit, Rank, Color, AGENT, USER, CARD_SIZE, change_card_size
+from const import FPS, SCREEN_SIZE, Point, Suit, Rank, Color, AGENT, USER, CARD_SIZE, CARDS_POINTS_BY_RANK
 
 
 class GameController:
@@ -18,7 +17,6 @@ class GameController:
 
         self.screen = pg.display.set_mode(SCREEN_SIZE)
         self.clock = pg.time.Clock()
-        self.agent = Agent()
 
         self.background_image = pg.image.load('./img/board.jpg')
         self.screen.blit(self.background_image, (0, 0))
@@ -39,17 +37,19 @@ class GameController:
         self.game_is_over = False
         self.is_animating = True
 
-        self.show_skip_button = False
+        self.show_skip_button = True
         self.skip_button_pos = Point(100, 395)
 
         self.can_through_only_by_rank = True
 
-        self.can_get_new_card = True
+        self.can_get_new_card = False
+        self.six_in_action = False
 
         self._initialize_board()
 
     def main_loop(self):
-        while not self.game_is_over:
+        while True:
+            self._check_if_game_is_over()
             self.is_animating = len(self.sprite_moves) != 0
 
             for event in pg.event.get():
@@ -57,6 +57,14 @@ class GameController:
                     exit()
                 elif not self.is_animating and event.type == pg.MOUSEBUTTONDOWN:
                     self.check_user_input()
+
+            if self.game_is_over:
+                continue
+
+            if not self.is_animating and self.current_player_move == AGENT and not self.can_through_only_by_rank:
+                self.ai_decide_which_move_to_make()
+            elif not self.is_animating and self.current_player_move == AGENT:
+                self.ai_through_all_possible_cards()
 
             self._update_animation()
 
@@ -83,8 +91,10 @@ class GameController:
 
             if self.can_get_new_card and self._user_has_chosen_deck(mouse_pos):
                 self._player_gets_a_card(USER)
-                self.can_get_new_card = False
-                self.show_skip_button = True
+
+                if not self.six_in_action:
+                    self.can_get_new_card = False
+                    self.show_skip_button = True
             elif 700 < mouse_pos.y < 1000:
                 for user_card in self.user_cards:
                     if user_card.was_chosen(mouse_pos):
@@ -98,6 +108,11 @@ class GameController:
                 self.show_skip_button = False
                 self.can_get_new_card = True
                 self.can_through_only_by_rank = False
+
+    def _check_if_game_is_over(self):
+        if len(self.agent_cards) == 0 or len(self.user_cards) == 0:
+            self._draw_game_over(self.current_player_move)
+            self.game_is_over = True
 
     def render_skip_button(self):
         font = pg.font.SysFont('liberationmono', 60)
@@ -129,7 +144,8 @@ class GameController:
 
         self.agent_cards = set(sample(self.deck_cards, 5))
         self.deck_cards.difference_update(self.agent_cards)
-        self.agent_cards_sprites.add([self.create_card(self.table_center, Suit.back_side, Rank.back_side).sprite for _ in range(len(self.agent_cards))])
+        agent_cards_coords = [Point(100 + i * 90, 150) for i in range(len(self.agent_cards))]
+        self.agent_cards_sprites.add([self.create_card(agent_cards_coords[i], Suit.back_side, Rank.back_side).sprite for i in range(len(self.agent_cards))])
 
         self.user_cards = set(sample(self.deck_cards, 4))
         self.deck_cards.difference_update(self.user_cards)
@@ -140,7 +156,6 @@ class GameController:
 
         self.sprite_moves.append(SpriteMove([self.card_in_action.sprite], [self.table_center]))
 
-        agent_cards_coords = [Point(100 + i * 90, 150) for i in range(len(self.agent_cards))]
         self.sprite_moves.append(SpriteMove(list(self.agent_cards_sprites), agent_cards_coords))
 
         user_cards_coords = [Point(100 + (i * 1.35) * 90, 750) for i in range(len(self.user_cards))]
@@ -167,8 +182,8 @@ class GameController:
 
     def can_make_move(self, chosen_card: Card):
         return self.card_in_action is None \
-               or (self.card_in_action.suit == chosen_card.suit and not self.can_through_only_by_rank) \
-               or self.card_in_action.rank == chosen_card.rank
+               or ((self.card_in_action.suit == chosen_card.suit or chosen_card.rank == Rank.jack) and not self.can_through_only_by_rank) \
+               or self.card_in_action.rank == chosen_card.rank \
 
     def _user_is_pressing_skip_button(self, mouse_pos):
         fits_x = self.skip_button_pos.x - 50 < mouse_pos.x < self.skip_button_pos.x + 50
@@ -185,15 +200,16 @@ class GameController:
 
             user_cards_coords = [Point(100 + (i * 1.35) * 90, 750) for i in range(len(self.user_cards))]
             self.sprite_moves.append(SpriteMove(list(self.user_cards_sprites), user_cards_coords))
+            self.sprite_moves.append(SpriteMove([card.sprite], [self.table_center]))
         else:
             self.agent_cards.difference_update({card})
-            self.agent_cards_sprites = pg.sprite.Group([self.create_card(self.table_center, Suit.back_side, Rank.back_side).sprite for _ in range(len(self.agent_cards))])
+            self.agent_cards_sprites = pg.sprite.Group([self.create_card(Point(100 + i * 90, 150), Suit.back_side, Rank.back_side).sprite for i in range(len(self.agent_cards))])
+            card.sprite.pos = (100, 150)
+            self.sprite_moves.append(SpriteMove([card.sprite], [self.table_center]))
 
         self.card_in_action = card
         self.card_in_action_sprite_group = pg.sprite.Group([card.sprite])
-        
-        self.sprite_moves.append(SpriteMove([card.sprite], [self.table_center]))
-        
+
         self._check_the_effect()
 
     def _draw_game_over(self, winner):
@@ -215,10 +231,12 @@ class GameController:
     def create_card(position: Point, suit, rank):
         return Card(suit=suit, rank=rank, pos_x=position.x, pos_y=position.y)
 
-    def _computer_make_move(self):
-        pass
-
     def _check_the_effect(self):
+        self.can_get_new_card = False
+        self.show_skip_button = True
+        self.can_through_only_by_rank = True
+        self.six_in_action = False
+
         if self.card_in_action.rank == Rank.ace:
             self._opponent_skips_move()
         elif self.card_in_action.rank == Rank.eight:
@@ -242,6 +260,11 @@ class GameController:
             self._player_gets_a_card(target_player)
 
             self._opponent_skips_move()
+        elif self.card_in_action.rank == Rank.six:
+            self.six_in_action = True
+            self.can_get_new_card = True
+            self.show_skip_button = False
+            self.can_through_only_by_rank = False
 
     def _player_gets_a_card(self, player):
         random_card = self._get_random_card_from_deck()
@@ -274,3 +297,136 @@ class GameController:
 
         backward_card_sprite = self.create_card(self.table_center, Suit.back_side, Rank.back_side).sprite
         self.sprite_moves.append(SpriteMove([backward_card_sprite], [self.deck_position]))
+
+    def ai_decide_which_move_to_make(self):
+        ai_has_any_moves = len(self.ai_get_all_possible_moves())
+
+        if self.can_get_new_card and not ai_has_any_moves:
+            self._player_gets_a_card(AGENT)
+            self.can_get_new_card = False
+            self.ai_decide_which_move_to_make()
+        elif not ai_has_any_moves:
+            self.ai_finishes_his_move()
+        else:
+            self.can_get_new_card = False
+
+            possible_moves = self.ai_get_all_possible_moves()
+            best_card_to_move = max(possible_moves, key=self.ai_value_the_move)
+
+            self._make_a_move(best_card_to_move)
+
+    def ai_get_all_possible_moves(self):
+        moves = []
+        for card in self.agent_cards:
+            if self.can_make_move(card):
+                if card.rank != Rank.six or self.ai_can_cover_six(card.suit):
+                    moves.append(card)
+
+        return moves
+
+    def ai_value_the_move(self, move_card: Card):
+        suit, rank = move_card.suit, move_card.rank
+        move_points = CARDS_POINTS_BY_RANK[rank]
+
+        if rank == Rank.queen and suit == Suit.spades:
+            move_points += 150
+
+        move_points += (self.ai_count_cards_with_specific_rank(rank) - 1) * 60
+
+        if self.ai_count_cards_with_specific_suit(suit) == 1 and self.ai_count_cards_with_specific_rank(rank) == 1:
+            move_points -= 70
+
+        if move_card.rank == Rank.six:
+            move_points += len(self.ai_find_max_rank_sequence(suit)) * 60
+
+        return move_points
+
+    def ai_value_the_move(self, move_card: Card):
+        suit, rank = move_card.suit, move_card.rank
+        move_points = CARDS_POINTS_BY_RANK[rank]
+
+        if rank == Rank.queen and suit == Suit.spades:
+            move_points += 150
+
+        move_points += (self.ai_count_cards_with_specific_rank(rank) - 1) * 60
+
+        if self.ai_count_cards_with_specific_suit(suit) == 1:
+            move_points -= 70
+
+        return move_points
+
+    def ai_count_cards_with_specific_rank(self, rank):
+        result = 0
+        for card in self.agent_cards:
+            if card.rank == rank:
+                result += 1
+
+        return result
+
+    def ai_count_cards_with_specific_suit(self, suit):
+        result = 0
+        for card in self.agent_cards:
+            if card.suit == suit:
+                result += 1
+
+        return result
+
+    def ai_finishes_his_move(self):
+        self.can_get_new_card = True
+        self.show_skip_button = False
+        self.can_through_only_by_rank = False
+        self.current_player_move = USER
+
+    def ai_through_all_possible_cards(self):
+        possible_thoughts = []
+
+        if self.card_in_action.rank == Rank.six:
+            best_sequence = self.ai_find_best_sequence_to_cover_six(self.card_in_action.suit)
+            self._make_a_move(best_sequence[0])
+        else:
+            for card in self.agent_cards:
+                if self.card_in_action.rank == card.rank:
+                    possible_thoughts.append(card)
+
+            if possible_thoughts:
+                self._make_a_move(possible_thoughts[0])
+            else:
+                self.ai_finishes_his_move()
+
+    def ai_can_cover_six(self, six_suit, check_another_sixs=True):
+        if self.ai_count_cards_with_specific_suit(six_suit) > 1:
+            return True
+
+        if self.ai_count_cards_with_specific_rank(Rank.six) > 1 and check_another_sixs:
+            another_six = []
+            for card in self.agent_cards:
+                if card.rank == Rank.six and card.suit != six_suit:
+                    another_six.append(card)
+
+            return any([self.ai_can_cover_six(another_six.suit, check_another_sixs=False) for another_six in another_six])
+
+    def ai_find_best_sequence_to_cover_six(self, six_suit):
+        max_sequence = self.ai_find_max_rank_sequence(six_suit)
+
+        for card in self.agent_cards:
+            if card.rank == Rank.six and card.suit != six_suit:
+                new_best_sequence = self.ai_find_max_rank_sequence(card.suit)
+                if len(new_best_sequence) + 1 > len(max_sequence):
+                    max_sequence = [card]
+                    max_sequence.extend(new_best_sequence)
+
+        return max_sequence
+
+    def ai_find_max_rank_sequence(self, suit):
+        max_sequence = []
+
+        for card in self.agent_cards:
+            if card.suit == suit and card.rank != Rank.six:
+                if self.ai_count_cards_with_specific_rank(card.rank) > len(max_sequence):
+                    max_sequence = [card]
+
+                    for another_card in self.agent_cards:
+                        if another_card.rank == card.rank and another_card.suit != card.suit:
+                            max_sequence.append(another_card)
+
+        return max_sequence
