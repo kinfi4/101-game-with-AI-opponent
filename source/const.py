@@ -10,6 +10,9 @@ FPS = 100
 
 CARD_SIZE = (120, 190)
 
+DECK_POSITION = Point(1000, 395)
+TABLE_CENTER = Point(500, 395)
+
 
 def change_card_size(multiplier):
     global CARD_SIZE
