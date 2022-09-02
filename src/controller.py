@@ -3,10 +3,10 @@ from random import sample, choice
 
 import pygame as pg
 
-from card import Card
-from card_sprite import SpriteMove
-from deck import Deck
-from const import *
+from src.card import Card
+from src.card_sprite import SpriteMove
+from src.deck import Deck
+from src.const import *
 
 
 class GameController:
@@ -16,7 +16,7 @@ class GameController:
         self.screen = pg.display.set_mode(SCREEN_SIZE)
         self.clock = pg.time.Clock()
 
-        self.background_image = pg.image.load('./img/board.jpg')
+        self.background_image = pg.image.load('src/img/board.jpg')
         self.screen.blit(self.background_image, (0, 0))
 
         self.deck = Deck()

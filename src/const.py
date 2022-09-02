@@ -1,11 +1,21 @@
+from typing import Tuple
 from collections import namedtuple
+
+from screeninfo import get_monitors
+
+
+def get_game_screen_size() -> Tuple[int, int]:
+    monitor = get_monitors()[0]
+
+    return monitor.width, monitor.height
+
 
 USER = 'USER'
 AGENT = 'AGENT'
 
 Point = namedtuple('Point', 'x y')
 
-SCREEN_SIZE = (1900, 900)
+SCREEN_SIZE = get_game_screen_size()
 FPS = 100
 
 CARD_SIZE = (120, 190)

@@ -1,7 +1,7 @@
 import math
 
 import pygame as pg
-from const import MOVE_SPEED, CARD_SIZE
+from src.const import MOVE_SPEED, CARD_SIZE
 
 
 class CardSprite(pg.sprite.Sprite):

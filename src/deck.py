@@ -1,7 +1,7 @@
 from random import sample, choice
 
-from card import Card
-from const import Rank, Suit, Point, DECK_POSITION
+from src.card import Card
+from src.const import Rank, Suit, Point, DECK_POSITION
 
 
 class Deck:

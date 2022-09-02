@@ -1,11 +1,11 @@
 import pygame as pg
 
-from controller import GameController
+from src.controller import GameController
 
 pg.mixer.pre_init(22100, -16, 2, 64)
 pg.init()
 
-s = pg.mixer.Sound('./sounds/forbidden-sournd.wav')
+s = pg.mixer.Sound('./src/sounds/forbidden-sournd.wav')
 s.set_volume(0.1)
 
 

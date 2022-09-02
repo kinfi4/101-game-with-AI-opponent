@@ -1,5 +1,5 @@
-from const import Rank, CARD_SIZE
-from card_sprite import CardSprite
+from src.const import Rank, CARD_SIZE
+from src.card_sprite import CardSprite
 
 
 class Card:
@@ -10,9 +10,9 @@ class Card:
         self.suit = suit
 
         if rank == Rank.back_side:
-            picture_path = './img/back-side.png'
+            picture_path = 'src/img/back-side.png'
         else:
-            picture_path = f'./img/cards/{rank}_of_{suit}.png'
+            picture_path = f'src/img/cards/{rank}_of_{suit}.png'
 
         self.sprite = CardSprite(self.position_x, self.position_y, picture_path)
 
